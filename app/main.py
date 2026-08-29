@@ -91,7 +91,7 @@ def verify(req: VerifyRequest) -> VerificationResponse:
 
 
 @app.get("/health")
-def healthz() -> dict[str, str]:
+def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
