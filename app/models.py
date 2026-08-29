@@ -1,10 +1,7 @@
 """
 Request/response schemas — the contract between the backend and the frontend.
 """
-from __future__ import annotations
-
 from typing import Literal, Optional
-
 from pydantic import BaseModel, Field
 
 
