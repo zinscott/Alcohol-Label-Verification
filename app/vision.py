@@ -104,7 +104,7 @@ def extract_and_match(image_bytes: bytes, mime_type: str, application: Applicati
 if __name__ == "__main__":
     import sys
 
-    path = sys.argv[1]  # python -m app.vision sample_data/good.png
+    path = sys.argv[1]  # python -m app.vision tests/test_image.png
     mime = "image/png" if path.endswith(".png") else "image/jpeg"
     demo_app = ApplicationData(
         brand_name="Stone's Throw",
