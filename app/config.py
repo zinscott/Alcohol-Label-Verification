@@ -2,7 +2,6 @@
 The government warning wording is fixed by 27 CFR 16.21. Do not reformat these strings.
 """
 import os
-from __future__ import annotations
 from dotenv import load_dotenv
 
 load_dotenv()
