@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Label Verification</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #5c5c5c;
+    --line: #d4d4d4;
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --pass: #1a7f37;
+    --fail: #c0392b;
+    --review: #b7791f;
+    --accent: #1f5fbf;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    font: 18px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--fg);
+    background: var(--bg);
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+  h1 { font-size: 28px; margin: 0 0 4px; }
+  p.sub { color: var(--muted); margin: 0 0 28px; }
+
+  .step {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .step h2 {
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+
+  #drop {
+    border: 2px dashed var(--line);
+    border-radius: 8px;
+    padding: 32px 16px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  #drop.hover { border-color: var(--accent); color: var(--accent); }
+  #drop input { display: none; }
+  #preview {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    cursor: pointer;
+  }
+  #preview-hint { text-align: center; font-size: 14px; color: var(--muted); margin-top: 8px; }
+
+  label.field { display: block; margin-bottom: 14px; }
+  label.field span { display: block; font-size: 15px; color: var(--muted); margin-bottom: 4px; }
+  label.field input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 18px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+
+  button#go {
+    width: 100%;
+    padding: 16px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button#go:disabled { background: #9bb4d8; cursor: default; }
+
+  #result { margin-top: 26px; }
+  .banner {
+    border-radius: 10px;
+    padding: 22px;
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .banner.PASS { background: var(--pass); }
+  .banner.FAIL { background: var(--fail); }
+  .banner.NEEDS_REVIEW { background: var(--review); }
+  .elapsed { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 18px; }
+
+  .row {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+  .row .name { font-weight: 600; margin-bottom: 6px; }
+  .row .name .tag { float: right; font-size: 14px; padding: 2px 8px; border-radius: 4px; color: #fff; }
+  .tag.ok { background: var(--pass); }
+  .tag.no { background: var(--fail); }
+  .row .vals { font-size: 15px; color: var(--muted); }
+  .row .vals b { color: var(--fg); font-weight: 600; }
+  .row .reason { margin-top: 6px; font-size: 15px; }
+
+  .checks { list-style: none; padding: 0; margin: 8px 0 0; font-size: 15px; }
+  .checks li::before { content: "✓ "; color: var(--pass); font-weight: 700; }
+  .checks li.bad::before { content: "✗ "; color: var(--fail); }
+  .warn-text {
+    margin-top: 10px; padding: 10px; background: var(--bg);
+    border-radius: 6px; font-size: 14px; white-space: pre-wrap;
+  }
+  .error { color: var(--fail); font-weight: 600; text-align: center; padding: 16px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Alcohol Label Verification</h1>
+  <p class="sub">Upload a label and enter the application details. Results in a few seconds.</p>
+
+  <div class="step">
+    <h2>1 &nbsp; Label image</h2>
+    <div id="drop">
+      <span id="droptext">Click to choose a photo, or drag one here</span>
+    </div>
+    <input type="file" id="file" accept="image/*" hidden>
+    <img id="preview" hidden alt="label preview">
+    <p id="preview-hint" hidden>Click the image to choose a different one</p>
+  </div>
+
+  <div class="step">
+    <h2>2 &nbsp; Application details</h2>
+    <label class="field"><span>Brand name</span><input id="brand_name" autocomplete="off"></label>
+    <label class="field"><span>Class / type designation</span><input id="class_type" autocomplete="off"></label>
+    <label class="field"><span>Alcohol content</span><input id="alcohol_content" autocomplete="off" placeholder="e.g. 40% ALC/VOL"></label>
+    <label class="field"><span>Net contents</span><input id="net_contents" autocomplete="off" placeholder="e.g. 750 mL"></label>
+  </div>
+
+  <button id="go" disabled>Verify Label</button>
+
+  <div id="result"></div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const drop = $("drop"), fileInput = $("file"), preview = $("preview"), go = $("go"), result = $("result");
+let imageDataUrl = null;
+
+const FIELDS = ["brand_name", "class_type", "alcohol_content", "net_contents"];
+const LABELS = {
+  brand_name: "Brand name",
+  class_type: "Class / type designation",
+  alcohol_content: "Alcohol content",
+  net_contents: "Net contents",
+};
+
+drop.addEventListener("click", () => fileInput.click());
+preview.addEventListener("click", () => fileInput.click());
+["dragover", "dragenter"].forEach((e) =>
+  drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.add("hover"); }));
+["dragleave", "drop"].forEach((e) =>
+  drop.addEventListener(e, () => drop.classList.remove("hover")));
+drop.addEventListener("drop", (ev) => {
+  ev.preventDefault();
+  if (ev.dataTransfer.files[0]) loadImage(ev.dataTransfer.files[0]);
+});
+fileInput.addEventListener("change", () => {
+  if (fileInput.files[0]) loadImage(fileInput.files[0]);
+});
+
+// Downscale client-side so the upload stays small and fast.
+function loadImage(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 1600;
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      imageDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      preview.src = imageDataUrl;
+      drop.hidden = true;
+      preview.hidden = false;
+      $("preview-hint").hidden = false;
+      updateButton();
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+FIELDS.forEach((f) => $(f).addEventListener("input", updateButton));
+function updateButton() {
+  const allFilled = FIELDS.every((f) => $(f).value.trim());
+  go.disabled = !(imageDataUrl && allFilled);
+}
+
+go.addEventListener("click", async () => {
+  go.disabled = true;
+  go.textContent = "Checking…";
+  result.innerHTML = "";
+  try {
+    const body = {
+      image_b64: imageDataUrl,
+      application: Object.fromEntries(FIELDS.map((f) => [f, $(f).value.trim()])),
+    };
+    const res = await fetch("/api/verify", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const detail = await res.json().catch(() => ({}));
+      throw new Error(detail.detail || `Request failed (${res.status})`);
+    }
+    render(await res.json());
+  } catch (e) {
+    result.innerHTML = `<div class="error">${e.message}</div>`;
+  } finally {
+    go.disabled = false;
+    go.textContent = "Verify Label";
+    updateButton();
+  }
+});
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+
+function render(data) {
+  const parts = [];
+  const label = { PASS: "PASS", FAIL: "FAIL", NEEDS_REVIEW: "NEEDS REVIEW" }[data.overall];
+  parts.push(`<div class="banner ${data.overall}">${label}</div>`);
+  parts.push(`<div class="elapsed">checked in ${data.elapsed_seconds}s &middot; ${esc(data.model)}</div>`);
+
+  for (const note of data.notes || []) {
+    parts.push(`<div class="row"><div class="reason">⚠ ${esc(note)}</div></div>`);
+  }
+
+  for (const f of data.fields) {
+    parts.push(`
+      <div class="row">
+        <div class="name">${esc(LABELS[f.field] || f.field)}
+          <span class="tag ${f.match ? "ok" : "no"}">${f.match ? "match" : "mismatch"}</span>
+        </div>
+        <div class="vals">label: <b>${esc(f.label_value) || "—"}</b> &nbsp;|&nbsp; application: <b>${esc(f.application_value)}</b></div>
+        <div class="reason">${esc(f.reason)}</div>
+      </div>`);
+  }
+
+  const w = data.government_warning;
+  const checkList = Object.entries(w.checks || {})
+    .map(([k, ok]) => `<li class="${ok ? "" : "bad"}">${esc(k.replace(/_/g, " "))}</li>`)
+    .join("");
+  parts.push(`
+    <div class="row">
+      <div class="name">Government warning statement
+        <span class="tag ${w.match ? "ok" : "no"}">${w.match ? "compliant" : "FAIL"}</span>
+      </div>
+      <div class="reason">${esc(w.reason)}</div>
+      <ul class="checks">${checkList}</ul>
+      ${w.label_text ? `<div class="warn-text">${esc(w.label_text)}</div>` : ""}
+    </div>`);
+
+  result.innerHTML = parts.join("");
+  result.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+</script>
+</body>
+</html>
